@@ -1,0 +1,30 @@
+{
+  "name": "react-scaf",
+  "version": "0.1.0",
+  "description": "Simple react component scaffolding. Supports popular react packages!",
+  "main": "index.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .ts"
+  },
+  "bin": {
+    "react-scaf": "./dist/index.js"
+  },
+  "keywords": [
+    "react",
+    "scaffolding"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "eslint": "^7.32.0",
+    "prettier": "^2.4.1",
+    "typescript": "^4.4.3"
+  }
+}
