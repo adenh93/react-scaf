@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as yargs from 'yargs'
+import yargs from 'yargs'
 import type { Args } from './types'
 import generate from './utils/generation'
 

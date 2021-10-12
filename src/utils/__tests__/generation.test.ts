@@ -1,5 +1,5 @@
-import * as fs from 'fs'
-import * as mock from 'mock-fs'
+import fs from 'fs'
+import mock from 'mock-fs'
 import { addComponentDirectory, rollbackChanges } from '../generation'
 
 describe('addComponentDirectory utility', () => {
@@ -22,7 +22,7 @@ describe('addComponentDirectory utility', () => {
   afterAll(mock.restore)
 })
 
-describe('rollback changes utility', () => {
+describe('rollbackChanges utility', () => {
   beforeAll(() => {
     mock({
       'src/TestComponent1': {

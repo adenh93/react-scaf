@@ -1,5 +1,5 @@
-import * as fs from 'fs'
-import * as chalk from 'chalk'
+import fs from 'fs'
+import chalk from 'chalk'
 import type { Args, FileOpts } from '../types'
 import getUserConfig from './config'
 
