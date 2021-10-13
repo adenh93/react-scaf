@@ -141,9 +141,12 @@ describe('generate utility', () => {
   }))
 
   test("it generates the components directory if it doesn't exist", async () => {
-    fsMock({
-      [path.join(process.cwd(), 'src')]: {},
-    })
+    fsMock(
+      {
+        src: {},
+      },
+      { createCwd: true },
+    )
 
     jest.spyOn(Config, 'default').mockResolvedValue({
       componentsDir: 'src\\components',
@@ -164,9 +167,12 @@ describe('generate utility', () => {
   })
 
   test('it generates components correctly', async () => {
-    fsMock({
-      [path.join(process.cwd(), 'src')]: {},
-    })
+    fsMock(
+      {
+        src: {},
+      },
+      { createCwd: true },
+    )
 
     jest.spyOn(Config, 'default').mockResolvedValue({
       componentsDir: 'src\\components',
@@ -218,11 +224,14 @@ describe('generate utility', () => {
   })
 
   test('it skips components that already exist in filesystem', async () => {
-    fsMock({
-      [path.join(process.cwd(), 'src', 'components', 'TestComponent2')]: {
-        'TestComponent2.jsx': 'export default <TestComponent2 />',
+    fsMock(
+      {
+        [path.join('src', 'components', 'TestComponent2')]: {
+          'TestComponent2.jsx': 'export default <TestComponent2 />',
+        },
       },
-    })
+      { createCwd: true },
+    )
 
     jest.spyOn(Config, 'default').mockResolvedValue({
       componentsDir: 'src\\components',
@@ -259,9 +268,12 @@ describe('generate utility', () => {
   })
 
   test('it rolls back changes if an error occurs', async () => {
-    fsMock({
-      [path.join(process.cwd(), 'src')]: {},
-    })
+    fsMock(
+      {
+        src: {},
+      },
+      { createCwd: true },
+    )
 
     jest.spyOn(Config, 'default').mockResolvedValue({
       componentsDir: 'src\\components',
@@ -300,5 +312,5 @@ describe('generate utility', () => {
     })
   })
 
-  afterEach(fsMock.restore)
+  afterAll(fsMock.restore)
 })

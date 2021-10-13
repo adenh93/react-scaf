@@ -2,19 +2,17 @@ import path from 'path'
 import type { Config } from '../types'
 
 const getUserConfig = async (): Promise<Config> => {
-  const filename = '.scaffed/config.js'
-  const cwd = process.cwd()
-  const filePath = path.join(cwd, filename)
+  const filePath = path.join(process.cwd(), '.scaffed', 'config.js')
 
   let config: Config = {} as Config
 
   try {
-    config = await import(filePath)
+    config = (await import(filePath)).default
   } catch (err) {
     throw Error(`Failed to load config file ${filePath}: ${err}`)
   }
 
-  if (!config) throw Error('Empty config file detected!')
+  if (!Object.keys(config).length) throw Error('Empty config file detected!')
   return config
 }
 
