@@ -15,6 +15,8 @@ describe('addComponentDirectory utility', () => {
     })
   })
 
+  afterAll(fsMock.restore)
+
   test('it creates a new directory', () => {
     const directoryName = path.join('src', 'components', 'TestComponent')
     const dirsAdded: string[] = []
@@ -24,8 +26,6 @@ describe('addComponentDirectory utility', () => {
     expect(fs.existsSync(directoryName)).toBe(true)
     expect(dirsAdded).toContain(directoryName)
   })
-
-  afterAll(fsMock.restore)
 })
 
 describe('rollbackChanges utility', () => {
@@ -43,6 +43,8 @@ describe('rollbackChanges utility', () => {
     })
   })
 
+  afterAll(fsMock.restore)
+
   test('it removes the appropriate component directories', () => {
     const dirsAdded: string[] = [
       path.join('src', 'components', 'TestComponent1'),
@@ -55,8 +57,6 @@ describe('rollbackChanges utility', () => {
     expect(fs.existsSync(path.join('src', 'components', 'TestComponent2'))).toBe(true)
     expect(fs.existsSync(dirsAdded[2])).toBe(false)
   })
-
-  afterAll(fsMock.restore)
 })
 
 describe('outputFiles utility', () => {
@@ -66,6 +66,8 @@ describe('outputFiles utility', () => {
       [path.join('src', 'components', 'TestComponent2')]: {},
     })
   })
+
+  afterAll(fsMock.restore)
 
   test('it ouputs files properly', () => {
     const files: FileOpts[] = [
@@ -124,12 +126,10 @@ describe('outputFiles utility', () => {
     )
     expect(jsFile.toString()).toEqual('export default <TestComponent2 />')
   })
-
-  afterAll(fsMock.restore)
 })
 
 describe('generate utility', () => {
-  const consoleSpy = jest.spyOn(console, 'log')
+  const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
 
   beforeEach(() => {
     consoleSpy.mockClear()
@@ -140,177 +140,199 @@ describe('generate utility', () => {
     yellow: (text: string) => text,
   }))
 
-  test("it generates the components directory if it doesn't exist", async () => {
-    fsMock(
-      {
-        src: {},
-      },
-      { createCwd: true },
-    )
-
-    jest.spyOn(Config, 'default').mockResolvedValue({
-      componentsDir: 'src\\components',
-      files: [
+  describe('components directory', () => {
+    beforeAll(() => {
+      fsMock(
         {
-          fileName: '[componentName].jsx',
-          template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
+          src: {},
         },
-      ],
+        { createCwd: true },
+      )
     })
 
-    const args: Args = { n: ['TestComponent1'] }
-    await generate(args)
+    afterAll(fsMock.restore)
 
-    const componentsDirExists = fs.existsSync(path.join(process.cwd(), 'src', 'components'))
-    expect(componentsDirExists).toBe(true)
+    test("it generates the components directory if it doesn't exist", async () => {
+      jest.spyOn(Config, 'default').mockResolvedValue({
+        componentsDir: 'src\\components',
+        files: [
+          {
+            fileName: '[componentName].jsx',
+            template: (componentName: string) => `export default <${componentName} />`,
+            subDirName: null,
+          },
+        ],
+      })
+
+      const args: Args = { n: ['TestComponent1'] }
+      await generate(args)
+
+      const componentsDirExists = fs.existsSync(path.join(process.cwd(), 'src', 'components'))
+      expect(componentsDirExists).toBe(true)
+    })
   })
 
-  test('it generates components correctly', async () => {
-    fsMock(
-      {
-        src: {},
-      },
-      { createCwd: true },
-    )
-
-    jest.spyOn(Config, 'default').mockResolvedValue({
-      componentsDir: 'src\\components',
-      files: [
+  describe('component generation', () => {
+    beforeAll(() => {
+      fsMock(
         {
-          fileName: '[componentName].jsx',
-          template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
+          src: {},
         },
-        {
-          fileName: '[componentName].test.jsx',
-          template: (componentName: string) => `describe("${componentName} tests", () => {})`,
-          subDirName: '__tests__',
-        },
-        {
-          fileName: 'index.js',
-          template: (componentName: string) => `export { default } from "./${componentName}"`,
-          subDirName: null,
-        },
-      ],
+        { createCwd: true },
+      )
     })
 
-    const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
-    await generate(args)
+    afterAll(fsMock.restore)
 
-    args.n.forEach((componentName: string) => {
-      const jsxFile = fs.readFileSync(
-        path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
+    test('it generates components correctly', async () => {
+      jest.spyOn(Config, 'default').mockResolvedValue({
+        componentsDir: 'src\\components',
+        files: [
+          {
+            fileName: '[componentName].jsx',
+            template: (componentName: string) => `export default <${componentName} />`,
+            subDirName: null,
+          },
+          {
+            fileName: '[componentName].test.jsx',
+            template: (componentName: string) => `describe("${componentName} tests", () => {})`,
+            subDirName: '__tests__',
+          },
+          {
+            fileName: 'index.js',
+            template: (componentName: string) => `export { default } from "./${componentName}"`,
+            subDirName: null,
+          },
+        ],
+      })
+
+      const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
+      await generate(args)
+
+      args.n.forEach((componentName: string) => {
+        const jsxFile = fs.readFileSync(
+          path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
+        )
+        expect(jsxFile.toString()).toEqual(`export default <${componentName} />`)
+
+        const testFile = fs.readFileSync(
+          path.join(
+            process.cwd(),
+            'src',
+            'components',
+            componentName,
+            '__tests__',
+            `${componentName}.test.jsx`,
+          ),
+        )
+        expect(testFile.toString()).toEqual(`describe("${componentName} tests", () => {})`)
+
+        const indexFile = fs.readFileSync(
+          path.join(process.cwd(), 'src', 'components', componentName, 'index.js'),
+        )
+        expect(indexFile.toString()).toEqual(`export { default } from "./${componentName}"`)
+      })
+    })
+  })
+
+  describe('warning', () => {
+    beforeAll(() => {
+      fsMock(
+        {
+          [path.join('src', 'components', 'TestComponent2')]: {
+            'TestComponent2.jsx': 'export default <TestComponent2 />',
+          },
+        },
+        { createCwd: true },
       )
-      expect(jsxFile.toString()).toEqual(`export default <${componentName} />`)
+    })
 
-      const testFile = fs.readFileSync(
-        path.join(
-          process.cwd(),
-          'src',
-          'components',
-          componentName,
-          '__tests__',
-          `${componentName}.test.jsx`,
+    afterAll(fsMock.restore)
+
+    test('it skips components that already exist in filesystem', async () => {
+      jest.spyOn(Config, 'default').mockResolvedValue({
+        componentsDir: 'src\\components',
+        files: [
+          {
+            fileName: '[componentName].jsx',
+            template: (componentName: string) => `export default <${componentName} />`,
+            subDirName: null,
+          },
+        ],
+      })
+
+      const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
+      await generate(args)
+
+      args.n.forEach((componentName: string) => {
+        const exists = fs.existsSync(
+          path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
+        )
+
+        expect(exists).toBe(true)
+      })
+
+      expect(console.log).toBeCalledWith(
+        chalk.yellow(
+          `Warning: ${path.join(
+            process.cwd(),
+            'src',
+            'components',
+            'TestComponent2',
+          )} already exists, skipping.`,
         ),
       )
-      expect(testFile.toString()).toEqual(`describe("${componentName} tests", () => {})`)
-
-      const indexFile = fs.readFileSync(
-        path.join(process.cwd(), 'src', 'components', componentName, 'index.js'),
-      )
-      expect(indexFile.toString()).toEqual(`export { default } from "./${componentName}"`)
     })
   })
 
-  test('it skips components that already exist in filesystem', async () => {
-    fsMock(
-      {
-        [path.join('src', 'components', 'TestComponent2')]: {
-          'TestComponent2.jsx': 'export default <TestComponent2 />',
-        },
-      },
-      { createCwd: true },
-    )
-
-    jest.spyOn(Config, 'default').mockResolvedValue({
-      componentsDir: 'src\\components',
-      files: [
+  describe('error', () => {
+    beforeAll(() => {
+      fsMock(
         {
-          fileName: '[componentName].jsx',
-          template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
+          src: {},
         },
-      ],
-    })
-
-    const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
-    await generate(args)
-
-    args.n.forEach((componentName: string) => {
-      const exists = fs.existsSync(
-        path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
+        { createCwd: true },
       )
-
-      expect(exists).toBe(true)
     })
 
-    expect(console.log).toBeCalledWith(
-      chalk.yellow(
-        `Warning: ${path.join(
-          process.cwd(),
-          'src',
-          'components',
-          'TestComponent2',
-        )} already exists, skipping.`,
-      ),
-    )
-  })
+    afterAll(fsMock.restore)
 
-  test('it rolls back changes if an error occurs', async () => {
-    fsMock(
-      {
-        src: {},
-      },
-      { createCwd: true },
-    )
-
-    jest.spyOn(Config, 'default').mockResolvedValue({
-      componentsDir: 'src\\components',
-      files: [
-        {
-          fileName: '[componentName].jsx',
-          template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
-        },
-        {
-          fileName: 'index.js',
-          template: () => {
-            throw Error('Test Error')
+    test('it rolls back changes if an error occurs', async () => {
+      jest.spyOn(Config, 'default').mockResolvedValue({
+        componentsDir: 'src\\components',
+        files: [
+          {
+            fileName: '[componentName].jsx',
+            template: (componentName: string) => `export default <${componentName} />`,
+            subDirName: null,
           },
-          subDirName: null,
-        },
-      ],
-    })
+          {
+            fileName: 'index.js',
+            template: () => {
+              throw Error('Test Error')
+            },
+            subDirName: null,
+          },
+        ],
+      })
 
-    const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
+      const args: Args = { n: ['TestComponent1', 'TestComponent2'] }
 
-    try {
-      await generate(args)
-    } catch (err) {
-      expect(err).toEqual(Error('Test Error'))
-      expect(console.log).toBeCalledWith(
-        chalk.red('An error occured generating components, rolling back.'),
-      )
-    }
+      try {
+        await generate(args)
+      } catch (err) {
+        expect(err).toEqual(Error('Test Error'))
+        expect(console.log).toBeCalledWith(
+          chalk.red('An error occured generating components, rolling back.'),
+        )
+      }
 
-    args.n.forEach((componentName: string) => {
-      const exists = fs.existsSync(
-        path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
-      )
-      expect(exists).toBe(false)
+      args.n.forEach((componentName: string) => {
+        const exists = fs.existsSync(
+          path.join(process.cwd(), 'src', 'components', componentName, `${componentName}.jsx`),
+        )
+        expect(exists).toBe(false)
+      })
     })
   })
-
-  afterAll(fsMock.restore)
 })
