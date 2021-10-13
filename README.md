@@ -23,7 +23,7 @@ I will be making changes to this package as I see fit, but if there are any feat
 
 ## Installation
 
-To install scaffed, run `npm install scaffed --save-dev`, or `yarn add -D scaffed` if using Yarn.
+To install scaffed, run `npm install -g scaffed`.
 
 Next, add the required configuration file to a directory in the top level of your project: `.scaffed/config.js`.
 
@@ -87,7 +87,7 @@ e.g. `[componentName].jsx` -> `SomeComponent.jsx`.
 
 ### Execution
 
-Once your configuration is to your liking, you can start generating components by using the `scaffed gen` console command. The generation command requires one command-line argument, `--componentNames`, or its alias: `-n`. The `--componentNames` argument can be provided one or more component names separated by spaces, for example: `scaffed gen -n SomeComponent OtherComponent`.
+Once your configuration is to your liking, you can start generating components by using the `scaffed` console command. The `scaffed` command requires one command-line argument, `--componentNames`, or its alias: `-n`. The `--componentNames` argument can be provided one or more component names separated by spaces, for example: `scaffed -n SomeComponent OtherComponent`.
 
 After executing the command, _scaffed_ will attempt to generate component scaffolding for all of the component names provided in the command line argument. For every component name, it will generate a component folder, along with all of the files and their content specified in the configuration.
 
@@ -158,7 +158,7 @@ module.exports = [
 ]
 ```
 
-After the following execution: `scaffed gen -n Box Flex`
+After the following execution: `scaffed -n Box Flex`
 
 The following scaffolding will be generated, assuming that the components don't already exist:
 
