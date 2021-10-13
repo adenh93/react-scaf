@@ -10,6 +10,6 @@ export interface Config {
 
 export interface FileOpts {
   fileName: string
-  subDirName?: string
+  subDirName?: string | null
   template: (componentName: string) => string
 }

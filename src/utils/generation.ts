@@ -1,5 +1,6 @@
 import fs from 'fs'
 import chalk from 'chalk'
+import path from 'path'
 import type { Args, FileOpts } from '../types'
 import getUserConfig from './config'
 
@@ -23,12 +24,12 @@ export const outputFiles = (
     let newComponentsDir = componentsDir
 
     if (subDirName) {
-      newComponentsDir += `/${subDirName}`
+      newComponentsDir = path.join(newComponentsDir, subDirName)
       if (!fs.existsSync(newComponentsDir)) fs.mkdirSync(newComponentsDir)
     }
 
     const parsedFilename = fileName.replace('[componentName]', componentName)
-    const outputFilename = `${newComponentsDir}/${parsedFilename}`
+    const outputFilename = path.join(newComponentsDir, parsedFilename)
 
     if (!fs.existsSync(outputFilename)) {
       const parsedTemplate = template(componentName)
@@ -46,7 +47,7 @@ const generate = async (args: Args): Promise<void> => {
 
   componentNames.forEach((componentName: string) => {
     try {
-      const outputDir = `${process.cwd()}/${componentsDir}/${componentName}`
+      const outputDir = path.join(process.cwd(), componentsDir, componentName)
 
       if (!fs.existsSync(componentsDir)) fs.mkdirSync(componentsDir)
 
