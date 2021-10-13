@@ -2,7 +2,7 @@
 
 name: npm publish
 
-on: 
+on:
   push:
     branches:
       - main
@@ -10,12 +10,14 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: Prod
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: 14
       - run: yarn install
+      - run: yarn build
       - run: yarn test
       - uses: JS-DevTools/npm-publish@v1
         with:
