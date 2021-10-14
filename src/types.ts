@@ -1,5 +1,6 @@
 export interface Args {
   [x: string]: unknown
+  c?: string
   n: string[]
 }
 

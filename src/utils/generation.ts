@@ -39,17 +39,17 @@ export const outputFiles = (
 }
 
 const generate = async (args: Args): Promise<void> => {
-  const config = await getUserConfig()
-  const { componentsDir, files } = config
-
   const componentNames: string[] = args.n
   const dirsAdded: string[] = []
 
-  componentNames.forEach((componentName: string) => {
-    try {
+  try {
+    const config = await getUserConfig(args.c)
+    const { componentsDir, files } = config
+
+    componentNames.forEach((componentName: string) => {
       const outputDir = path.join(process.cwd(), componentsDir, componentName)
 
-      if (!fs.existsSync(componentsDir)) fs.mkdirSync(componentsDir)
+      if (!fs.existsSync(componentsDir)) fs.mkdirSync(componentsDir, { recursive: true })
 
       if (!fs.existsSync(outputDir)) {
         addComponentDirectory(outputDir, dirsAdded)
@@ -57,12 +57,12 @@ const generate = async (args: Args): Promise<void> => {
       } else {
         console.log(chalk.yellow(`Warning: ${outputDir} already exists, skipping.`))
       }
-    } catch (err) {
-      console.log(chalk.red('An error occured generating components, rolling back.'))
-      rollbackChanges(dirsAdded)
-      throw err
-    }
-  })
+    })
+  } catch (err) {
+    console.log(chalk.red('An error occured generating components, rolling back.'))
+    console.error(err)
+    rollbackChanges(dirsAdded)
+  }
 }
 
 export default generate

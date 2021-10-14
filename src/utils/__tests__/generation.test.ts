@@ -129,11 +129,13 @@ describe('outputFiles utility', () => {
 })
 
 describe('generate utility', () => {
-  const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
+  const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
   const cwdSpy = jest.spyOn(process, 'cwd').mockReturnValue('')
 
   beforeEach(() => {
-    consoleSpy.mockClear()
+    consoleLogSpy.mockClear()
+    consoleErrorSpy.mockClear()
     cwdSpy.mockClear()
   })
 

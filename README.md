@@ -37,21 +37,43 @@ A quick example of the structure of `.scaffed/config.js` is as follows:
 __.scaffed/config.js__
 ```js
 module.exports = {
-  componentsDir: './src/components',
-  files: [
-    {
-      fileName: "[componentName].tsx",
-      template: componentName => `export default <${componentName} />`
-    },
-    {
-      fileName: "index.js",
-      template: componentName => `export { default } from "./${componentName}"`
-    }
-  ],
+  // The 'main' configuration is required!
+  main: {
+    componentsDir: './src/components',
+    files: [
+      {
+        fileName: "[componentName].tsx",
+        template: componentName => `export default <${componentName} />`
+      },
+      {
+        fileName: "index.js",
+        template: componentName => `export { default } from "./${componentName}"`
+      }
+    ],
+  },
+  // A configuration like this is optional, and can named anything you desire.
+  ui: {
+    componentsDir: './src/components/ui',
+    files: [
+      {
+        fileName: "[componentName].css.tsx",
+        template: componentName => `export default <${componentName} />`
+      },
+      {
+        fileName: "index.js",
+        template: componentName => `export { default } from "./${componentName}"`
+      }
+    ],
+  }
+  // You can define more custom configurations as you wish. 
 }
 ```
 
-The default export expects the following properties:
+The config file supports multiple different named configurations to cover all of the different component contexts in your application. For example, the `ui` key above will return its specific configuration settings if the _scaffed_ command is called like such: `scaffed -c ui -n ComponentName`.
+
+Even if you don't define multiple configurations, you __MUST__ at least have a configuration named _main_ defined.
+
+The configuration settings for each of these expect the following properties:
 
 __Config__
 | Name          | Type       | Required | Description                                                                  |
@@ -89,6 +111,8 @@ e.g. `[componentName].jsx` -> `SomeComponent.jsx`.
 
 Once your configuration is to your liking, you can start generating components by using the `scaffed` console command. The `scaffed` command requires one command-line argument, `--componentNames`, or its alias: `-n`. The `--componentNames` argument can be provided one or more component names separated by spaces, for example: `scaffed -n SomeComponent OtherComponent`.
 
+If you wish to generate component scaffolding with a specific configuration context loaded, you can use the optional argument `--config` or its alias `-c`. The `--config` argument accepts a single string denoting the configuration to use, granted that it exists in your config file. An example of this would be `scaffed -c ui -n SomeComponent OtherComponent`. Note that if this argument is not provided a value, it will default to `main`, so you __MUST__ at the very least define a `main` configuration in `.scaffed/config.json`.
+
 After executing the command, _scaffed_ will attempt to generate component scaffolding for all of the component names provided in the command line argument. For every component name, it will generate a component folder, along with all of the files and their content specified in the configuration.
 
 If a component already exists when _scaffed_ attempts to generate scaffolding for it, it will simply be skipped during the generation to prevent disturbing the structure of existing components.
@@ -104,8 +128,14 @@ __.scaffed/config.js__
 const files = require('./templates')
 ​
 module.exports = {
-  componentsDir: './src/components',
-  files,
+  main: {
+    componentsDir: './src/components',
+    files,
+  },
+  ui: {
+    componentsDir: './src/components/ui',
+    files,
+  }
 }
 ```
 
@@ -158,32 +188,35 @@ module.exports = [
 ]
 ```
 
-After the following execution: `scaffed -n Box Flex`
+After the following executions: `scaffed -c ui -n Box Flex` and `scaffed -n SomeComponent`, The following scaffolding will be generated, assuming that the components don't already exist:
 
-The following scaffolding will be generated, assuming that the components don't already exist:
-
-__Box Directory Structure__
+__Directory Structure__
 ```
 .
-├── Box
-├── __tests__
-│   └── Box.test.tsx
-├── Box.tsx
-├── Box.stories.tsx
-├── Box.css.ts
-└── index.ts
-```
-
-__Flex Directory Structure__
-```
-.
-├── Flex
-├── __tests__
-│   └── Flex.test.tsx
-├── Flex.tsx
-├── Flex.stories.tsx
-├── Flex.css.ts
-└── index.ts
+├── src/
+└── components/
+    ├── SomeComponent/
+    │   ├── __tests__/
+    │   │   └── SomeComponent.test.tsx
+    │   ├── SomeComponent.tsx
+    │   ├── SomeComponent.stories.tsx
+    │   ├── SomeComponent.css.ts
+    │   └── index.ts
+    └── ui/
+        ├── Box/
+        │   ├── __tests__/
+        │   │   └── Box.test.tsx
+        │   ├── Box.tsx
+        │   ├── Box.stories.tsx
+        │   ├── Box.css.ts
+        │   └── Box.index.ts
+        └── Flex/
+            ├── __tests__/
+            │   └── Flex.test.tsx
+            ├── Flex.tsx
+            ├── Flex.stories.tsx
+            ├── Flex.css.ts
+            └── Flex.index.ts
 ```
 
 The contents of each file will be determined by the templates, with the componentName substituted in wherever it is referenced from the template function argument.
