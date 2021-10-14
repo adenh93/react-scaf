@@ -1,7 +1,7 @@
 import fs from 'fs'
 import chalk from 'chalk'
 import path from 'path'
-import type { Args, FileOpts } from '../types'
+import type { Args, FileOrSubDir } from '../types'
 import getUserConfig from './config'
 
 export const addComponentDirectory = (directoryName: string, dirsAdded: string[]): void => {
@@ -16,24 +16,25 @@ export const rollbackChanges = (dirsAdded: string[]): void => {
 }
 
 export const outputFiles = (
-  files: FileOpts[],
+  files: FileOrSubDir[],
   componentName: string,
   componentsDir: string,
 ): void => {
-  files.forEach(({ fileName, subDirName, template }: FileOpts) => {
+  files.forEach((file: FileOrSubDir) => {
     let newComponentsDir = componentsDir
 
-    if (subDirName) {
-      newComponentsDir = path.join(newComponentsDir, subDirName)
+    if ('subDirName' in file && file.subDirName) {
+      newComponentsDir = path.join(newComponentsDir, file.subDirName)
       if (!fs.existsSync(newComponentsDir)) fs.mkdirSync(newComponentsDir)
-    }
+      return outputFiles(file.files, componentName, newComponentsDir)
+    } else if ('fileName' in file) {
+      const parsedFilename = file.fileName.replace('[componentName]', componentName)
+      const outputFilename = path.join(newComponentsDir, parsedFilename)
 
-    const parsedFilename = fileName.replace('[componentName]', componentName)
-    const outputFilename = path.join(newComponentsDir, parsedFilename)
-
-    if (!fs.existsSync(outputFilename)) {
-      const parsedTemplate = template(componentName)
-      fs.writeFileSync(outputFilename, parsedTemplate)
+      if (!fs.existsSync(outputFilename)) {
+        const parsedTemplate = file.template(componentName)
+        fs.writeFileSync(outputFilename, parsedTemplate)
+      }
     }
   })
 }

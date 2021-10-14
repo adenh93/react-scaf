@@ -1,5 +1,8 @@
 # scaffed
 
+![npm badge](https://img.shields.io/npm/v/scaffed)
+![build status](https://img.shields.io/github/workflow/status/adenh93/scaffed/npm%20publish)
+
 Scaffed is a simple solution to generating component scaffolding. It uses a template based approach, allowing you to specify the common files, along with their content, to generate when creating your component directories.
 
 ## Justification
@@ -42,12 +45,21 @@ module.exports = {
     componentsDir: './src/components',
     files: [
       {
-        fileName: "[componentName].tsx",
+        fileName: '[componentName].tsx',
         template: componentName => `export default <${componentName} />`
       },
       {
-        fileName: "index.js",
-        template: componentName => `export { default } from "./${componentName}"`
+        subDirName: '__tests__',
+        files: [
+          {
+            fileName: '[componentName].test.tsx',
+            template: componentName => `describe('${componentName} tests', () => {})`
+          }
+        ]
+      },
+      {
+        fileName: 'index.js',
+        template: componentName => `export { default } from './${componentName}'`
       }
     ],
   },
@@ -56,12 +68,12 @@ module.exports = {
     componentsDir: './src/components/ui',
     files: [
       {
-        fileName: "[componentName].css.tsx",
+        fileName: '[componentName].css.tsx',
         template: componentName => `export default <${componentName} />`
       },
       {
-        fileName: "index.js",
-        template: componentName => `export { default } from "./${componentName}"`
+        fileName: 'index.js',
+        template: componentName => `export { default } from './${componentName}'`
       }
     ],
   }
@@ -76,17 +88,22 @@ Even if you don't define multiple configurations, you __MUST__ at least have a c
 The configuration settings for each of these expect the following properties:
 
 __Config__
-| Name          | Type       | Required | Description                                                                  |
-|---------------|------------|----------|------------------------------------------------------------------------------|
-| componentsDir | string     | true     | The name of the directory where components are created, e.g. src/components. |
-| files         | FileOpts[] | true     | A list of files to generate for each component.                              |
+| Name          | Type           | Required | Description                                                                  |
+|---------------|----------------|----------|------------------------------------------------------------------------------|
+| componentsDir | string         | true     | The name of the directory where components are created, e.g. src/components. |
+| files         | FileOrSubDir[] | true     | A list of files/subdirectories to generate for each component.               |
 
-__FileOpts__
-| Name        | Type                              | Required | Description                                                                    |
-|-------------|-----------------------------------|----------|--------------------------------------------------------------------------------|
-| fileName    | string                            | true     | Filename for the specific file.                                                |
-| template    | (componentName: string) => string | true     | Template function returning a string to generate the file's contents.          |
-| subDirName  | string                            | false    | If provided, will nest the file within a subdirectory with the specified name. |
+__File__
+| Name     | Type   | Required | Description                                                           |
+|----------|--------|----------|-----------------------------------------------------------------------|
+| fileName | string | true     | Filename for the specific file.                                       |
+| template | string | true     | Template function returning a string to generate the file's contents. |
+
+__SubDir__
+| Name       | Type           | Required | Description                                                         |
+|------------|----------------|----------|---------------------------------------------------------------------|
+| subDirName | string         | true     | Name of the specific subdirectory.                                  |
+| files      | FileOrSubDir[] | true     | A list of files/subdirectories to generate under this subdirectory. |
 
 #### Accessing Component Name in Templates
 
@@ -142,7 +159,7 @@ module.exports = {
 __.scaffed/templates.js__
 ```js
 const reactTemplate = (componentName) =>
-  `import { FC } from "react"
+  `import { FC } from 'react'
   
 interface ${componentName}Props {}
 ​
@@ -152,14 +169,14 @@ export default ${componentName}
 `
 ​
 const testTemplate = (componentName) =>
-  `import { render } from "@testing-library/react"
-import ${componentName} from "./${componentName}"
+  `import { render } from '@testing-library/react'
+import ${componentName} from './${componentName}'
 ​
-describe("${componentName} tests", () => {})
+describe('${componentName} tests', () => {})
 `
 ​
 const storiesTemplate = (componentName) =>
-  `import ${componentName} from "./${componentName}"
+  `import ${componentName} from './${componentName}'
 ​
 export default {
     component: ${componentName},
@@ -170,18 +187,26 @@ export const Primary = () => <${componentName} />
 `
 ​
 const styledTemplate = () =>
-  `import styled from "styled-components"
+  `import styled from 'styled-components'
 ​
 const StyledComponent = styled.span\`\`
 ​
 export default StyledComponent
 `
 ​
-const indexTemplate = (componentName) => `export { default } from "./${componentName}"`
+const indexTemplate = (componentName) => `export { default } from './${componentName}'`
 ​
 module.exports = [
   { fileName: '[componentName].tsx', template: reactTemplate },
-  { fileName: '[componentName].test.tsx', subDirName: '__tests__', template: testTemplate },
+  { 
+    subDirName: '__tests__',
+    files: [
+      {
+        fileName: '[componentName].test.tsx', 
+        template: testTemplate
+      }
+    ]
+  },
   { fileName: '[componentName].stories.tsx', template: storiesTemplate },
   { fileName: '[componentName].css.ts', template: styledTemplate },
   { fileName: 'index.ts', template: indexTemplate },
@@ -225,7 +250,7 @@ e.g.
 
 __Box.tsx__
 ```tsx
-import { FC } from "react"
+import { FC } from 'react'
 
 interface BoxProps {}
 
@@ -236,7 +261,7 @@ export default Box
 
 __Flex.stories.tsx__
 ```tsx
-import Flex from "./Flex"
+import Flex from './Flex'
 ​
 export default {
   component: Flex,

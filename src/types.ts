@@ -6,11 +6,17 @@ export interface Args {
 
 export interface Config {
   componentsDir: string
-  files: FileOpts[]
+  files: FileOrSubDir[]
 }
 
-export interface FileOpts {
+export interface File {
   fileName: string
-  subDirName?: string | null
   template: (componentName: string) => string
 }
+
+export interface SubDir {
+  subDirName: string
+  files: FileOrSubDir[]
+}
+
+export type FileOrSubDir = File | SubDir

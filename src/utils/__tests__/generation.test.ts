@@ -2,7 +2,7 @@ import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
 import fsMock from 'mock-fs'
-import { Args, FileOpts } from '../../types'
+import { Args, FileOrSubDir } from '../../types'
 import * as Config from '../config'
 import generate, { addComponentDirectory, outputFiles, rollbackChanges } from '../generation'
 
@@ -68,16 +68,14 @@ describe('outputFiles utility', () => {
   })
 
   test('it ouputs files properly', () => {
-    const files: FileOpts[] = [
+    const files: FileOrSubDir[] = [
       {
         fileName: '[componentName].jsx',
         template: (componentName: string) => `export default <${componentName} />`,
-        subDirName: null,
       },
       {
         fileName: 'index.js',
         template: (componentName: string) => `export { default } from "./${componentName}"`,
-        subDirName: null,
       },
     ]
 
@@ -96,16 +94,19 @@ describe('outputFiles utility', () => {
   })
 
   test('it outputs subdirectories properly', () => {
-    const files: FileOpts[] = [
+    const files: FileOrSubDir[] = [
       {
-        fileName: '[componentName].test.jsx',
-        template: (componentName: string) => `describe("${componentName} tests", () => {})`,
         subDirName: '__tests__',
+        files: [
+          {
+            fileName: '[componentName].test.jsx',
+            template: (componentName: string) => `describe("${componentName} tests", () => {})`,
+          },
+        ],
       },
       {
         fileName: '[componentName].jsx',
         template: (componentName: string) => `export default <${componentName} />`,
-        subDirName: null,
       },
     ]
 
@@ -158,7 +159,6 @@ describe('generate utility', () => {
         {
           fileName: '[componentName].jsx',
           template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
         },
       ],
     })
@@ -184,17 +184,19 @@ describe('generate utility', () => {
         {
           fileName: '[componentName].jsx',
           template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
         },
         {
-          fileName: '[componentName].test.jsx',
-          template: (componentName: string) => `describe("${componentName} tests", () => {})`,
           subDirName: '__tests__',
+          files: [
+            {
+              fileName: '[componentName].test.jsx',
+              template: (componentName: string) => `describe("${componentName} tests", () => {})`,
+            },
+          ],
         },
         {
           fileName: 'index.js',
           template: (componentName: string) => `export { default } from "./${componentName}"`,
-          subDirName: null,
         },
       ],
     })
@@ -243,7 +245,6 @@ describe('generate utility', () => {
         {
           fileName: '[componentName].jsx',
           template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
         },
       ],
     })
@@ -285,14 +286,12 @@ describe('generate utility', () => {
         {
           fileName: '[componentName].jsx',
           template: (componentName: string) => `export default <${componentName} />`,
-          subDirName: null,
         },
         {
           fileName: 'index.js',
           template: () => {
             throw Error('Test Error')
           },
-          subDirName: null,
         },
       ],
     })
