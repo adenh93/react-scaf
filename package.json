@@ -2,7 +2,7 @@
   "name": "scaffed",
   "version": "0.3.0",
   "description": "Simple component scaffolding.",
-  "author": "",
+  "author": "adenh93",
   "license": "MIT",
   "main": "index.ts",
   "files": [
@@ -10,7 +10,10 @@
   ],
   "keywords": [
     "react",
-    "scaffolding"
+    "node",
+    "scaffold",
+    "scaffolding",
+    "boilerplate"
   ],
   "scripts": {
     "build": "tsc",
