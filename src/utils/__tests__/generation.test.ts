@@ -2,9 +2,14 @@ import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
 import fsMock from 'mock-fs'
-import { Args, FileOrSubDir } from '../../types'
+import { Args, File, FileOrSubDir } from '../../types'
 import * as Config from '../config'
-import generate, { addComponentDirectory, outputFiles, rollbackChanges } from '../generation'
+import generate, {
+  addComponentDirectory,
+  addComponentFile,
+  outputFiles,
+  rollbackChanges,
+} from '../generation'
 
 describe('addComponentDirectory utility', () => {
   beforeAll(() => {
@@ -23,6 +28,55 @@ describe('addComponentDirectory utility', () => {
 
     expect(fs.existsSync(directoryName)).toBe(true)
     expect(dirsAdded).toContain(directoryName)
+  })
+
+  afterAll(fsMock.restore)
+})
+
+describe('addComponentFile utility', () => {
+  // const consoleLogSpy = jest.spyOn(console, 'log')
+
+  jest.mock('chalk', () => ({
+    green: (text: string) => text,
+  }))
+
+  beforeEach(() => {
+    // consoleLogSpy.mockClear()
+  })
+
+  beforeAll(() => {
+    fsMock(
+      {
+        src: {
+          components: {
+            NewComponent: {},
+          },
+        },
+      },
+      { createCwd: true },
+    )
+  })
+
+  test('it creates a new component file', () => {
+    const file: File = {
+      fileName: '[componentName].test.tsx',
+      template: (componentName) => `describe('${componentName} tests', () => {})`,
+    }
+
+    const componentName = 'NewComponent'
+    const componentsDir = path.join('src', 'components')
+    const outputDir = path.join(process.cwd(), componentsDir, componentName)
+
+    addComponentFile(file, componentName, componentsDir, outputDir)
+
+    const newFilePath = path.join(outputDir, `${componentName}.test.tsx`)
+    const newFile = fs.readFileSync(newFilePath)
+
+    expect(newFile.toString()).toEqual("describe('NewComponent tests', () => {})")
+
+    const expectedPath = path.join(componentsDir, componentName, `${componentName}.test.tsx`)
+
+    expect(console.log).toHaveBeenCalledWith(chalk.green(`Added file: ${expectedPath}`))
   })
 
   afterAll(fsMock.restore)
@@ -61,10 +115,13 @@ describe('rollbackChanges utility', () => {
 
 describe('outputFiles utility', () => {
   beforeAll(() => {
-    fsMock({
-      [path.join('src', 'components', 'TestComponent1')]: {},
-      [path.join('src', 'components', 'TestComponent2')]: {},
-    })
+    fsMock(
+      {
+        [path.join('src', 'components', 'TestComponent1')]: {},
+        [path.join('src', 'components', 'TestComponent2')]: {},
+      },
+      { createCwd: true },
+    )
   })
 
   test('it ouputs files properly', () => {
@@ -80,9 +137,10 @@ describe('outputFiles utility', () => {
     ]
 
     const componentName = 'TestComponent1'
-    const componentsDir = 'src/components/TestComponent1'
+    const componentsDir = path.join('src', 'components', 'TestComponent1')
+    const outputDir = path.join(process.cwd(), componentsDir)
 
-    outputFiles(files, componentName, componentsDir)
+    outputFiles(files, componentName, componentsDir, outputDir)
 
     const jsxFile = fs.readFileSync(
       path.join('src', 'components', 'TestComponent1', 'TestComponent1.jsx'),
@@ -112,8 +170,9 @@ describe('outputFiles utility', () => {
 
     const componentName = 'TestComponent2'
     const componentsDir = path.join('src', 'components', 'TestComponent2')
+    const outputDir = path.join(process.cwd(), componentsDir)
 
-    outputFiles(files, componentName, componentsDir)
+    outputFiles(files, componentName, componentsDir, outputDir)
 
     const testFile = fs.readFileSync(
       path.join('src', 'components', 'TestComponent2', '__tests__', 'TestComponent2.test.jsx'),
@@ -306,8 +365,6 @@ describe('generate utility', () => {
         chalk.red('An error occured generating components, rolling back.'),
       )
     }
-
-    console.warn(process.cwd())
 
     args.n.forEach((componentName: string) => {
       const exists = fs.existsSync(

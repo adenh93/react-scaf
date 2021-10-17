@@ -1,8 +1,26 @@
 import fs from 'fs'
 import chalk from 'chalk'
 import path from 'path'
-import type { Args, FileOrSubDir } from '../types'
+import type { Args, File, FileOrSubDir } from '../types'
 import getUserConfig from './config'
+
+export const addComponentFile = (
+  file: File,
+  componentName: string,
+  componentsDir: string,
+  outputDir: string,
+): void => {
+  const parsedFilename = file.fileName.replace('[componentName]', componentName)
+  const outputFilename = path.join(outputDir, parsedFilename)
+
+  if (!fs.existsSync(outputFilename)) {
+    const parsedTemplate = file.template(componentName)
+    const logFilename = path.join(componentsDir, componentName, parsedFilename)
+
+    fs.writeFileSync(outputFilename, parsedTemplate)
+    console.log(chalk.green(`Added file: ${logFilename}`))
+  }
+}
 
 export const addComponentDirectory = (directoryName: string, dirsAdded: string[]): void => {
   fs.mkdirSync(directoryName)
@@ -19,22 +37,17 @@ export const outputFiles = (
   files: FileOrSubDir[],
   componentName: string,
   componentsDir: string,
+  outputDir: string,
 ): void => {
   files.forEach((file: FileOrSubDir) => {
-    let newComponentsDir = componentsDir
+    let newOutputDir = outputDir
 
     if ('subDirName' in file && file.subDirName) {
-      newComponentsDir = path.join(newComponentsDir, file.subDirName)
-      if (!fs.existsSync(newComponentsDir)) fs.mkdirSync(newComponentsDir)
-      return outputFiles(file.files, componentName, newComponentsDir)
+      newOutputDir = path.join(newOutputDir, file.subDirName)
+      if (!fs.existsSync(newOutputDir)) fs.mkdirSync(newOutputDir)
+      return outputFiles(file.files, componentName, componentsDir, newOutputDir)
     } else if ('fileName' in file) {
-      const parsedFilename = file.fileName.replace('[componentName]', componentName)
-      const outputFilename = path.join(newComponentsDir, parsedFilename)
-
-      if (!fs.existsSync(outputFilename)) {
-        const parsedTemplate = file.template(componentName)
-        fs.writeFileSync(outputFilename, parsedTemplate)
-      }
+      addComponentFile(file, componentName, componentsDir, newOutputDir)
     }
   })
 }
@@ -54,7 +67,7 @@ const generate = async (args: Args): Promise<void> => {
 
       if (!fs.existsSync(outputDir)) {
         addComponentDirectory(outputDir, dirsAdded)
-        outputFiles(files, componentName, outputDir)
+        outputFiles(files, componentName, componentsDir, outputDir)
       } else {
         console.log(chalk.yellow(`Warning: ${outputDir} already exists, skipping.`))
       }
